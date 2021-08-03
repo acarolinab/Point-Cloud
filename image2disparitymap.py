@@ -3,6 +3,13 @@ import cv2
 from matplotlib import pyplot as plt
 import argparse
 
+def new_size(img):
+    width = 640
+    height = 480
+    dim = (width, height)
+    resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+    return resized
+
 
 ap = argparse.ArgumentParser( description='Image RGB')
 ap.add_argument("-l", 
@@ -14,18 +21,26 @@ ap.add_argument("-r",
 args = vars(ap.parse_args())
 
 
-imgL = cv2.imread(args['imageL'],0)
-imgR = cv2.imread(args['imageR'],0)
+imgL = cv2.imread(args['imageL'])
+imgR = cv2.imread(args['imageR'])
+(h, w, d) = imgL.shape
+print("w: {}, h: {}, d: {}".format(w, h, d))
+print("Size:",imgL.size)
+
+grayL = cv2.cvtColor(imgL, cv2.COLOR_BGR2GRAY)
+grayR = cv2.cvtColor(imgR, cv2.COLOR_BGR2GRAY)
+
+""" plt.imshow(grayR)
+plt.show() """
 
 
+esquerda = new_size(grayL)
+direita = new_size(grayR)
 
-""" stereo = cv2.StereoBM_create(numDisparities=16, blockSize=5)
-
-disparity = stereo.compute(imgL,imgR)
-
-plt.imshow(disparity,'gray')
-
-plt.show()  """
+#cv2.imshow('Gray image', esquerda)
+  
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
 
 win_size = 5
 min_disp = -1
@@ -45,7 +60,19 @@ P2 = 32*3*win_size**2) #32*3*win_size**2)
 
 #Compute disparity map
 print ("\nComputing the disparity  map...")
-disparity_map = stereo.compute(imgL, imgR)
+disparity_map = stereo.compute(esquerda, direita)
 
-plt.imshow(disparity_map,'gray')
+raw_h = disparity_map.shape[0]
+raw_w = disparity_map.shape[1]
+a = np.empty((raw_h,raw_w), np.uint16)
+
+median = cv2.medianBlur(disparity_map,5)
+#blur = cv2.bilateralFilter(disparity_map,9,75,75)
+
+map = cv2.resize(disparity_map, (3840,2160), interpolation = cv2.INTER_AREA)
+
+
+
+#plt.imshow(disparity_map, cmap='plasma')
+plt.imshow(blur, cmap='plasma')
 plt.show()
